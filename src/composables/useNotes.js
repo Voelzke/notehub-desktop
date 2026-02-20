@@ -52,14 +52,6 @@ export function useNotes() {
       );
     }
 
-    // Sort: tasks first, then by modified date descending
-    result.sort((a, b) => {
-      const aTask = a.frontmatter?.type === 'task' ? 1 : 0;
-      const bTask = b.frontmatter?.type === 'task' ? 1 : 0;
-      if (aTask !== bTask) return bTask - aTask;
-      return (b.modified || 0) - (a.modified || 0);
-    });
-
     return result;
   });
 

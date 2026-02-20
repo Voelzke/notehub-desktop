@@ -118,15 +118,27 @@
       </div>
     </div>
 
-    <!-- Notes List -->
+    <!-- Sort + Notes List -->
     <div class="sidebar-section notes-section">
       <div class="section-header">
         <span>Notizen</span>
-        <span class="section-count">{{ filteredRegularNotes.length }}</span>
+        <span class="section-count">{{ sortedNotes.length }}</span>
+      </div>
+      <div class="sort-bar">
+        <select v-model="sortOrder" class="sort-select">
+          <option value="modified_desc">Zuletzt geändert</option>
+          <option value="modified_asc">Älteste zuerst</option>
+          <option value="title_asc">Titel A-Z</option>
+          <option value="title_desc">Titel Z-A</option>
+          <option value="created_desc">Zuletzt erstellt</option>
+          <option value="created_asc">Älteste erstellt</option>
+          <option value="due_asc">Fälligkeit</option>
+          <option value="priority_desc">Priorität</option>
+        </select>
       </div>
       <div class="section-content notes-list">
         <div
-          v-for="note in filteredRegularNotes"
+          v-for="note in sortedNotes"
           :key="note.filename"
           @click="$emit('select', note.filename)"
           class="note-item"
@@ -152,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   notes: Array,
@@ -179,13 +191,52 @@ const tagsOpen = ref(false);
 const templatesOpen = ref(false);
 const tasksOpen = ref(true);
 const showNewMenu = ref(false);
+const sortOrder = ref(localStorage.getItem('notehub-sort') || 'modified_desc');
+
+watch(sortOrder, v => localStorage.setItem('notehub-sort', v));
+
+function applySorting(list) {
+  const sorted = [...list];
+  switch (sortOrder.value) {
+    case 'title_asc':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+    case 'title_desc':
+      return sorted.sort((a, b) => b.title.localeCompare(a.title, 'de'));
+    case 'modified_asc':
+      return sorted.sort((a, b) => (a.modified || 0) - (b.modified || 0));
+    case 'created_desc':
+      return sorted.sort((a, b) => (b.created || 0) - (a.created || 0));
+    case 'created_asc':
+      return sorted.sort((a, b) => (a.created || 0) - (b.created || 0));
+    case 'due_asc':
+      return sorted.sort((a, b) => {
+        const aDue = a.frontmatter?.due;
+        const bDue = b.frontmatter?.due;
+        if (!aDue && !bDue) return 0;
+        if (!aDue) return 1;
+        if (!bDue) return -1;
+        return String(aDue).localeCompare(String(bDue));
+      });
+    case 'priority_desc':
+      return sorted.sort((a, b) => {
+        const aPrio = a.frontmatter?.priority;
+        const bPrio = b.frontmatter?.priority;
+        if (aPrio == null && bPrio == null) return 0;
+        if (aPrio == null) return 1;
+        if (bPrio == null) return -1;
+        return aPrio - bPrio;
+      });
+    default: // modified_desc
+      return sorted.sort((a, b) => (b.modified || 0) - (a.modified || 0));
+  }
+}
 
 const openTasks = computed(() => {
-  return props.tasks.filter(t => t.frontmatter?.status !== 'done');
+  return applySorting(props.tasks.filter(t => t.frontmatter?.status !== 'done'));
 });
 
-const filteredRegularNotes = computed(() => {
-  return props.notes.filter(n => n.frontmatter?.type !== 'task');
+const sortedNotes = computed(() => {
+  return applySorting(props.notes.filter(n => n.frontmatter?.type !== 'task'));
 });
 
 function startResize(e) {

@@ -55,7 +55,8 @@ function readNotesFromFolder(notesPath) {
         title: filename.replace(/\.md$/, ''),
         frontmatter,
         body,
-        modified: stats.mtimeMs
+        modified: stats.mtimeMs,
+        created: stats.birthtimeMs
       };
     } catch (e) {
       return null;

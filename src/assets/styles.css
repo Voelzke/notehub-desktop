@@ -435,6 +435,27 @@ body {
 .dot-yellow { background: #cca700; }
 .dot-red { background: #f44747; }
 
+/* Sort Bar */
+.sort-bar {
+  padding: 4px 12px;
+}
+
+.sort-select {
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  border-color: var(--accent);
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
   padding: 8px 12px;
