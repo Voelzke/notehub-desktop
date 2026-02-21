@@ -3,23 +3,30 @@
     <!-- Toolbar -->
     <div class="editor-toolbar">
       <div class="toolbar-left">
-        <button @click="insertMarkdown('**', '**')" title="Fett (Ctrl+B)" class="toolbar-btn"><b>B</b></button>
-        <button @click="insertMarkdown('*', '*')" title="Kursiv (Ctrl+I)" class="toolbar-btn"><i>I</i></button>
-        <button @click="insertMarkdown('~~', '~~')" title="Durchgestrichen" class="toolbar-btn"><s>S</s></button>
-        <span class="toolbar-sep"></span>
-        <button @click="insertLine('# ')" title="H1" class="toolbar-btn">H1</button>
-        <button @click="insertLine('## ')" title="H2" class="toolbar-btn">H2</button>
-        <button @click="insertLine('### ')" title="H3" class="toolbar-btn">H3</button>
-        <span class="toolbar-sep"></span>
-        <button @click="insertBlock('---')" title="Linie" class="toolbar-btn">&mdash;</button>
-        <button @click="insertLine('- ')" title="Liste" class="toolbar-btn">&#8226;</button>
-        <button @click="insertLine('- [ ] ')" title="Checkbox" class="toolbar-btn">&#9744;</button>
-        <span class="toolbar-sep"></span>
-        <button @click="insertDate" title="Datum einfügen" class="toolbar-btn">&#128197;</button>
-        <button @click="insertTime" title="Zeit einfügen" class="toolbar-btn">&#128339;</button>
-        <button @click="insertLink" title="Link einfügen" class="toolbar-btn">&#128279;</button>
+        <button @click="previewMode = !previewMode" class="toolbar-btn" :class="{ active: previewMode }">
+          {{ previewMode ? 'Bearbeiten' : 'Vorschau' }}
+        </button>
+        <template v-if="!previewMode">
+          <span class="toolbar-sep"></span>
+          <button @click="insertMarkdown('**', '**')" title="Fett (Ctrl+B)" class="toolbar-btn"><b>B</b></button>
+          <button @click="insertMarkdown('*', '*')" title="Kursiv (Ctrl+I)" class="toolbar-btn"><i>I</i></button>
+          <button @click="insertMarkdown('~~', '~~')" title="Durchgestrichen" class="toolbar-btn"><s>S</s></button>
+          <span class="toolbar-sep"></span>
+          <button @click="insertLine('# ')" title="H1" class="toolbar-btn">H1</button>
+          <button @click="insertLine('## ')" title="H2" class="toolbar-btn">H2</button>
+          <button @click="insertLine('### ')" title="H3" class="toolbar-btn">H3</button>
+          <span class="toolbar-sep"></span>
+          <button @click="insertBlock('---')" title="Linie" class="toolbar-btn">&mdash;</button>
+          <button @click="insertLine('- ')" title="Liste" class="toolbar-btn">&#8226;</button>
+          <button @click="insertLine('- [ ] ')" title="Checkbox" class="toolbar-btn">&#9744;</button>
+          <span class="toolbar-sep"></span>
+          <button @click="insertDate" title="Datum einfügen" class="toolbar-btn">&#128197;</button>
+          <button @click="insertTime" title="Zeit einfügen" class="toolbar-btn">&#128339;</button>
+          <button @click="insertLink" title="Link einfügen" class="toolbar-btn">&#128279;</button>
+          <button @click="pickImage" title="Bild einfügen" class="toolbar-btn">&#128206;</button>
+        </template>
       </div>
-      <div class="toolbar-right">
+      <div class="toolbar-right" v-if="!previewMode">
         <button
           @click="$emit('toggle-template')"
           class="toolbar-btn"
@@ -36,7 +43,7 @@
         >
           {{ note.frontmatter?.type === 'task' ? 'Aufgabe entfernen' : 'Als Aufgabe' }}
         </button>
-        <button @click="console.log('[Editor] save clicked'); $emit('save')" class="toolbar-btn btn-save" :disabled="saveLock" title="Speichern">
+        <button @click="$emit('save')" class="toolbar-btn btn-save" :disabled="saveLock" title="Speichern">
           &#128190;
         </button>
         <button @click="$emit('delete')" class="toolbar-btn btn-delete" title="Löschen">
@@ -66,35 +73,42 @@
       @update-frontmatter="$emit('update-frontmatter', $event)"
     />
 
-    <!-- Textarea with Wikilink Autocomplete -->
+    <!-- Textarea / Preview -->
     <div class="editor-body-wrapper">
-      <textarea
-        ref="textareaRef"
-        class="editor-textarea"
-        :value="note.body"
-        @input="onBodyInput"
-        @keydown="onKeydown"
-        @click="onTextareaClick"
-        @scroll="closeAutocomplete"
-        placeholder="Schreibe hier..."
-      ></textarea>
+      <!-- Preview Mode -->
+      <div v-if="previewMode" class="editor-preview" v-html="renderedMarkdown" @click="onPreviewClick"></div>
 
-      <!-- Wikilink Autocomplete -->
-      <div
-        v-if="showWikiComplete"
-        class="wiki-autocomplete"
-        :style="{ top: wikiCompletePos.top + 'px', left: wikiCompletePos.left + 'px' }"
-      >
+      <!-- Edit Mode -->
+      <template v-else>
+        <textarea
+          ref="textareaRef"
+          class="editor-textarea"
+          :value="note.body"
+          @input="onBodyInput"
+          @keydown="onKeydown"
+          @click="onTextareaClick"
+          @scroll="closeAutocomplete"
+          @paste="onPaste"
+          placeholder="Schreibe hier..."
+        ></textarea>
+
+        <!-- Wikilink Autocomplete -->
         <div
-          v-for="(match, i) in wikiMatches"
-          :key="match.filename"
-          @mousedown.prevent="insertWikilink(match.title)"
-          class="wiki-match"
-          :class="{ active: i === wikiSelectedIndex }"
+          v-if="showWikiComplete"
+          class="wiki-autocomplete"
+          :style="{ top: wikiCompletePos.top + 'px', left: wikiCompletePos.left + 'px' }"
         >
-          {{ match.title }}
+          <div
+            v-for="(match, i) in wikiMatches"
+            :key="match.filename"
+            @mousedown.prevent="insertWikilink(match.title)"
+            class="wiki-match"
+            :class="{ active: i === wikiSelectedIndex }"
+          >
+            {{ match.title }}
+          </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <!-- Backlinks -->
@@ -121,7 +135,8 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
+import MarkdownIt from 'markdown-it';
 import TagInput from './TagInput.vue';
 import TaskBar from './TaskBar.vue';
 
@@ -129,14 +144,55 @@ const props = defineProps({
   note: Object,
   allTags: Array,
   allNotes: Array,
+  notesPath: String,
   backlinks: Array,
   saveLock: Boolean
 });
 
 const emit = defineEmits(['update-body', 'update-frontmatter', 'rename', 'save', 'delete', 'navigate', 'toggle-task', 'toggle-template']);
 
+// --- Markdown-it setup ---
+const md = new MarkdownIt({ html: true, linkify: true, breaks: true });
+
+// Wikilink plugin
+md.inline.ruler.push('wikilink', (state, silent) => {
+  if (state.src.charCodeAt(state.pos) !== 0x5B) return false;
+  if (state.src.charCodeAt(state.pos + 1) !== 0x5B) return false;
+  const start = state.pos + 2;
+  const end = state.src.indexOf(']]', start);
+  if (end === -1) return false;
+  const content = state.src.slice(start, end);
+  if (!content || content.includes('\n')) return false;
+  if (!silent) {
+    const token = state.push('wikilink', '', 0);
+    token.content = content;
+  }
+  state.pos = end + 2;
+  return true;
+});
+
+md.renderer.rules.wikilink = (tokens, idx) => {
+  const title = md.utils.escapeHtml(tokens[idx].content);
+  return `<a class="wikilink" data-title="${title}">${title}</a>`;
+};
+
+// Custom image renderer: resolve relative paths via notehub:// protocol
+const defaultImageRender = md.renderer.rules.image || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options);
+};
+md.renderer.rules.image = function(tokens, idx, options, env, self) {
+  const token = tokens[idx];
+  const src = token.attrGet('src');
+  if (src && !/^(https?:|data:|notehub:|file:)/.test(src)) {
+    token.attrSet('src', `notehub://local/${src}`);
+  }
+  return defaultImageRender(tokens, idx, options, env, self);
+};
+
+// --- Refs ---
 const textareaRef = ref(null);
 const backlinksOpen = ref(false);
+const previewMode = ref(false);
 const showWikiComplete = ref(false);
 const wikiCompletePos = ref({ top: 0, left: 0 });
 const wikiQuery = ref('');
@@ -144,12 +200,75 @@ const wikiSelectedIndex = ref(0);
 const wikiMatches = ref([]);
 const wikiStartPos = ref(0);
 
+// --- Preview ---
+const renderedMarkdown = computed(() => {
+  if (!props.note?.body) return '';
+  let html = md.render(props.note.body);
+  // Checkboxes
+  html = html.replace(/<li>\s*\[ \]\s*/g, '<li class="task-list-item"><input type="checkbox" disabled> ');
+  html = html.replace(/<li>\s*\[x\]\s*/gi, '<li class="task-list-item"><input type="checkbox" disabled checked> ');
+  return html;
+});
+
+function onPreviewClick(e) {
+  const link = e.target.closest('.wikilink');
+  if (link) {
+    e.preventDefault();
+    const title = link.dataset.title;
+    if (title) emit('navigate', title);
+  }
+}
+
+// --- Image paste ---
+async function onPaste(e) {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const blob = item.getAsFile();
+      const arrayBuffer = await blob.arrayBuffer();
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const filename = `img_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+      const result = await window.api.saveImage({ buffer: new Uint8Array(arrayBuffer), filename });
+      if (result.success) {
+        insertAtCursor(`![Bild](${result.path})`);
+      }
+      return;
+    }
+  }
+}
+
+async function pickImage() {
+  const result = await window.api.pickImage();
+  if (result.success) {
+    insertAtCursor(`![Bild](${result.path})`);
+  }
+}
+
+function insertAtCursor(text) {
+  const textarea = textareaRef.value;
+  if (!textarea) return;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+  const newValue = value.substring(0, start) + text + value.substring(end);
+  emit('update-body', newValue);
+  nextTick(() => {
+    const newPos = start + text.length;
+    textarea.setSelectionRange(newPos, newPos);
+    textarea.focus();
+  });
+}
+
+// --- Body input ---
 function onBodyInput(e) {
-  console.log('[Editor] onBodyInput, length:', e.target.value.length);
   emit('update-body', e.target.value);
   checkWikilink(e.target);
 }
 
+// --- Wikilink autocomplete ---
 function checkWikilink(textarea) {
   const pos = textarea.selectionStart;
   const text = textarea.value.substring(0, pos);
@@ -164,7 +283,6 @@ function checkWikilink(textarea) {
       .slice(0, 10);
 
     if (wikiMatches.value.length > 0) {
-      // Position the autocomplete near cursor
       const rect = textarea.getBoundingClientRect();
       const lineHeight = 20;
       const lines = text.split('\n');
@@ -242,13 +360,11 @@ function onKeydown(e) {
 }
 
 function onTextareaClick(e) {
-  // Ctrl+Click on wikilinks
   if (e.ctrlKey || e.metaKey) {
     const textarea = e.target;
     const pos = textarea.selectionStart;
     const text = textarea.value;
 
-    // Find if click position is inside [[ ... ]]
     const before = text.substring(0, pos);
     const after = text.substring(pos);
     const openIdx = before.lastIndexOf('[[');
@@ -264,6 +380,7 @@ function onTextareaClick(e) {
   }
 }
 
+// --- Formatting helpers ---
 function insertMarkdown(prefix, suffix) {
   const textarea = textareaRef.value;
   if (!textarea) return;
@@ -290,12 +407,9 @@ function insertLine(prefix) {
   if (!textarea) return;
   const start = textarea.selectionStart;
   const text = textarea.value;
-
-  // Find the beginning of the current line
   const lineStart = text.lastIndexOf('\n', start - 1) + 1;
   const newText = text.substring(0, lineStart) + prefix + text.substring(lineStart);
   emit('update-body', newText);
-
   nextTick(() => {
     textarea.setSelectionRange(start + prefix.length, start + prefix.length);
     textarea.focus();
@@ -310,7 +424,6 @@ function insertBlock(block) {
   const insert = '\n' + block + '\n';
   const newText = text.substring(0, start) + insert + text.substring(start);
   emit('update-body', newText);
-
   nextTick(() => {
     textarea.setSelectionRange(start + insert.length, start + insert.length);
     textarea.focus();
@@ -318,33 +431,13 @@ function insertBlock(block) {
 }
 
 function insertDate() {
-  const textarea = textareaRef.value;
-  if (!textarea) return;
   const date = new Date().toISOString().slice(0, 10);
-  const start = textarea.selectionStart;
-  const text = textarea.value;
-  const newText = text.substring(0, start) + date + text.substring(textarea.selectionEnd);
-  emit('update-body', newText);
-
-  nextTick(() => {
-    textarea.setSelectionRange(start + date.length, start + date.length);
-    textarea.focus();
-  });
+  insertAtCursor(date);
 }
 
 function insertTime() {
-  const textarea = textareaRef.value;
-  if (!textarea) return;
   const time = new Date().toTimeString().slice(0, 5);
-  const start = textarea.selectionStart;
-  const text = textarea.value;
-  const newText = text.substring(0, start) + time + text.substring(textarea.selectionEnd);
-  emit('update-body', newText);
-
-  nextTick(() => {
-    textarea.setSelectionRange(start + time.length, start + time.length);
-    textarea.focus();
-  });
+  insertAtCursor(time);
 }
 
 function insertLink() {

@@ -298,10 +298,15 @@ export function useNotes() {
     return notes.value.find(n => n.title === title) || null;
   }
 
-  // Listen for external file changes
+  // Listen for external file changes (debounced)
+  let reloadTimer = null;
   if (typeof window !== 'undefined' && window.api) {
     window.api.onFilesChanged(() => {
-      loadNotes();
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        loadNotes();
+      }, 500);
     });
   }
 

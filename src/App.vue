@@ -22,6 +22,7 @@
       :note="selectedNote"
       :all-tags="allTags"
       :all-notes="notes"
+      :notes-path="notesPath"
       :backlinks="getBacklinks(selectedNote)"
       :save-lock="saveLock"
       @update-body="(b) => { console.log('[App] update-body received'); updateNoteBody(b); }"
@@ -67,11 +68,13 @@ const { initTheme } = useTheme();
 
 const ready = ref(false);
 const showFolderPicker = ref(false);
+const notesPath = ref('');
 
 onMounted(async () => {
   initTheme();
-  const notesPath = await window.api.getNotesPath();
-  if (notesPath) {
+  const np = await window.api.getNotesPath();
+  if (np) {
+    notesPath.value = np;
     await loadNotes();
     ready.value = true;
   } else {
@@ -83,6 +86,7 @@ async function pickFolder() {
   const folderPath = await window.api.pickFolder();
   if (folderPath) {
     await window.api.setNotesPath(folderPath);
+    notesPath.value = folderPath;
     await loadNotes();
     showFolderPicker.value = false;
     ready.value = true;

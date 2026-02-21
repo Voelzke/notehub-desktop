@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const yaml = require('js-yaml');
+const { pathToFileURL } = require('url');
 
 let mainWindow;
 let watcher = null;
@@ -9,6 +10,12 @@ const isDev = process.argv.includes('--dev');
 const savingFiles = new Set();
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
+// Register custom protocol for local image serving (must be before app.whenReady)
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'notehub',
+  privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true }
+}]);
 
 function loadSettings() {
   try {
@@ -120,6 +127,15 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Protocol handler for local images
+  protocol.handle('notehub', (request) => {
+    const settings = loadSettings();
+    if (!settings.notesPath) return new Response('Not found', { status: 404 });
+    const url = new URL(request.url);
+    const filePath = path.join(settings.notesPath, decodeURIComponent(url.pathname));
+    return net.fetch(pathToFileURL(filePath).href);
+  });
+
   createWindow();
 
   // IPC Handlers
@@ -207,6 +223,40 @@ app.whenReady().then(() => {
     } catch (e) {
       return { success: false, error: e.message };
     }
+  });
+
+  ipcMain.handle('save-image', (event, { buffer, filename }) => {
+    const settings = loadSettings();
+    if (!settings.notesPath) return { success: false, error: 'No notes path' };
+    try {
+      const imagesDir = path.join(settings.notesPath, 'images');
+      if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+      fs.writeFileSync(path.join(imagesDir, filename), Buffer.from(buffer));
+      return { success: true, path: `images/${filename}` };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('pick-image', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [{ name: 'Bilder', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] }]
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      const srcPath = result.filePaths[0];
+      const ext = path.extname(srcPath);
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const filename = `img_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}${ext}`;
+      const settings = loadSettings();
+      if (!settings.notesPath) return { success: false };
+      const imagesDir = path.join(settings.notesPath, 'images');
+      if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+      fs.copyFileSync(srcPath, path.join(imagesDir, filename));
+      return { success: true, path: `images/${filename}` };
+    }
+    return { success: false };
   });
 
   // Startup: verify file system write access

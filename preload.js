@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('api', {
     return ipcRenderer.invoke('save-note', data);
   },
   deleteNote: (filename) => ipcRenderer.invoke('delete-note', filename),
+  saveImage: (data) => ipcRenderer.invoke('save-image', data),
+  pickImage: () => ipcRenderer.invoke('pick-image'),
   onFilesChanged: (callback) => {
     ipcRenderer.on('files-changed', (event, data) => callback(data));
   }
