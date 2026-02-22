@@ -67,6 +67,13 @@
       @update="updateTags"
     />
 
+    <!-- Contacts -->
+    <ContactInput
+      :contacts="note.frontmatter?.contacts || []"
+      :all-contacts="allContacts"
+      @update="updateContacts"
+    />
+
     <!-- Task Bar -->
     <TaskBar
       :note="note"
@@ -138,11 +145,13 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import MarkdownIt from 'markdown-it';
 import TagInput from './TagInput.vue';
+import ContactInput from './ContactInput.vue';
 import TaskBar from './TaskBar.vue';
 
 const props = defineProps({
   note: Object,
   allTags: Array,
+  allContacts: Array,
   allNotes: Array,
   notesPath: String,
   backlinks: Array,
@@ -446,6 +455,16 @@ function insertLink() {
 
 function updateTags(newTags) {
   const fm = { ...props.note.frontmatter, tags: newTags };
+  emit('update-frontmatter', fm);
+}
+
+function updateContacts(newContacts) {
+  const fm = { ...props.note.frontmatter };
+  if (newContacts.length > 0) {
+    fm.contacts = newContacts;
+  } else {
+    delete fm.contacts;
+  }
   emit('update-frontmatter', fm);
 }
 </script>

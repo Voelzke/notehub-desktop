@@ -69,6 +69,33 @@
       </div>
     </div>
 
+    <!-- Contacts Section -->
+    <div class="sidebar-section" v-if="allContacts.length > 0">
+      <div class="section-header" @click="contactsOpen = !contactsOpen">
+        <span class="section-arrow">{{ contactsOpen ? '&#9660;' : '&#9654;' }}</span>
+        <span>&#128100; Kontakte</span>
+        <span class="section-count">{{ allContacts.length }}</span>
+      </div>
+      <div v-if="contactsOpen" class="section-content tags-list">
+        <button
+          v-if="activeContact"
+          @click="$emit('set-contact', null)"
+          class="tag-item tag-active"
+        >
+          {{ activeContact }} &times;
+        </button>
+        <button
+          v-for="c in allContacts"
+          :key="c.name"
+          @click="$emit('set-contact', activeContact === c.name ? null : c.name)"
+          class="tag-item"
+          :class="{ 'tag-active': activeContact === c.name }"
+        >
+          {{ c.name }}
+        </button>
+      </div>
+    </div>
+
     <!-- Templates Section -->
     <div class="sidebar-section" v-if="templates.length > 0">
       <div class="section-header" @click="templatesOpen = !templatesOpen">
@@ -169,15 +196,17 @@ import { ref, computed, watch } from 'vue';
 const props = defineProps({
   notes: Array,
   allTags: Array,
+  allContacts: Array,
   templates: Array,
   tasks: Array,
   selectedFilename: String,
   searchQuery: String,
   activeTag: String,
+  activeContact: String,
   getTaskColor: Function
 });
 
-defineEmits(['select', 'search', 'set-tag', 'new-note', 'new-task', 'new-from-template', 'toggle-task-done']);
+defineEmits(['select', 'search', 'set-tag', 'set-contact', 'new-note', 'new-task', 'new-from-template', 'toggle-task-done']);
 
 const appVersion = __APP_VERSION__;
 const buildDate = (() => {
@@ -188,12 +217,14 @@ const buildDate = (() => {
 
 const sidebarWidth = ref(280);
 const tagsOpen = ref(false);
+const contactsOpen = ref(localStorage.getItem('notehub-contacts-open') === 'true');
 const templatesOpen = ref(false);
 const tasksOpen = ref(true);
 const showNewMenu = ref(false);
 const sortOrder = ref(localStorage.getItem('notehub-sort') || 'modified_desc');
 
 watch(sortOrder, v => localStorage.setItem('notehub-sort', v));
+watch(contactsOpen, v => localStorage.setItem('notehub-contacts-open', v));
 
 function applySorting(list) {
   const sorted = [...list];

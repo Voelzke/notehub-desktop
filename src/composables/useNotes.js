@@ -4,6 +4,7 @@ const notes = ref([]);
 const selectedNoteFilename = ref(null);
 const searchQuery = ref('');
 const activeTag = ref(null);
+const activeContact = ref(null);
 const saveLock = ref(false);
 let saveTimer = null;
 let initialized = ref(false);
@@ -19,6 +20,21 @@ export function useNotes() {
       }
     });
     return [...tagSet].sort((a, b) => a.localeCompare(b, 'de'));
+  });
+
+  const allContacts = computed(() => {
+    const contactMap = new Map();
+    notes.value.forEach(n => {
+      const contacts = n.frontmatter?.contacts;
+      if (Array.isArray(contacts)) {
+        contacts.forEach(c => {
+          if (c?.name && !contactMap.has(c.name)) {
+            contactMap.set(c.name, { name: c.name, company: c.company || '' });
+          }
+        });
+      }
+    });
+    return [...contactMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   });
 
   const templates = computed(() => {
@@ -41,6 +57,13 @@ export function useNotes() {
       result = result.filter(n => {
         const tags = n.frontmatter?.tags;
         return Array.isArray(tags) && tags.includes(activeTag.value);
+      });
+    }
+
+    if (activeContact.value) {
+      result = result.filter(n => {
+        const contacts = n.frontmatter?.contacts;
+        return Array.isArray(contacts) && contacts.some(c => c?.name === activeContact.value);
       });
     }
 
@@ -316,7 +339,9 @@ export function useNotes() {
     selectedNoteFilename,
     searchQuery,
     activeTag,
+    activeContact,
     allTags,
+    allContacts,
     templates,
     tasks,
     filteredNotes,

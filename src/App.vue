@@ -3,15 +3,18 @@
     <Sidebar
       :notes="filteredNotes"
       :all-tags="allTags"
+      :all-contacts="allContacts"
       :templates="templates"
       :tasks="tasks"
       :selected-filename="selectedNoteFilename"
       :search-query="searchQuery"
       :active-tag="activeTag"
+      :active-contact="activeContact"
       :get-task-color="getTaskColor"
       @select="selectNote"
       @search="searchQuery = $event"
       @set-tag="activeTag = $event"
+      @set-contact="activeContact = $event"
       @new-note="createNote(null, false)"
       @new-task="createNote(null, true)"
       @new-from-template="handleNewFromTemplate"
@@ -21,6 +24,7 @@
       v-if="selectedNote"
       :note="selectedNote"
       :all-tags="allTags"
+      :all-contacts="allContacts"
       :all-notes="notes"
       :notes-path="notesPath"
       :backlinks="getBacklinks(selectedNote)"
@@ -57,8 +61,8 @@ import { useNotes } from './composables/useNotes.js';
 import { useTheme } from './composables/useTheme.js';
 
 const {
-  notes, selectedNote, selectedNoteFilename, searchQuery, activeTag,
-  allTags, templates, tasks, filteredNotes, saveLock,
+  notes, selectedNote, selectedNoteFilename, searchQuery, activeTag, activeContact,
+  allTags, allContacts, templates, tasks, filteredNotes, saveLock,
   loadNotes, selectNote, saveCurrentNote, updateNoteBody,
   updateNoteFrontmatter, renameNote, createNote, deleteNote,
   getTaskColor, getBacklinks, findNoteByTitle
