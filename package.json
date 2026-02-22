@@ -1,6 +1,6 @@
 {
   "name": "notehub-desktop",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "NoteHub Desktop - Markdown note editor with YAML frontmatter",
   "main": "main.js",
   "scripts": {

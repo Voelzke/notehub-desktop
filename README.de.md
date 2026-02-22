@@ -1,19 +1,32 @@
-# NoteHub Desktop – Notizen & Aufgaben auf deinem Computer
+# NoteHub – Notizen & Aufgaben für Nextcloud
 
 > 🇬🇧 [English Version](README.md)
 
-**Eine schnelle, portable Notiz- und Aufgabenverwaltung, die direkt mit deinen Markdown-Dateien arbeitet.**
+**Deine Notizen, Aufgaben und Ideen an einem Ort – basierend auf einfachen Markdown-Dateien.**
 
-NoteHub Desktop liest und schreibt einfache `.md`-Dateien mit YAML-Frontmatter. Keine Datenbank, kein Server, keine Cloud nötig – nur du und deine Dateien. Kompatibel mit Obsidian, Joplin und jedem Texteditor.
+NoteHub ist eine moderne Notiz- und Aufgabenverwaltung für Nextcloud. Jede Notiz ist eine einfache `.md`-Datei mit YAML-Frontmatter – kein proprietäres Format, kein Vendor Lock-in. Deine Daten gehören dir.
 
 ---
 
-## ✨ Highlights
+## ✨ Was NoteHub besonders macht
 
-- **Portabel** – Einfach herunterladen und starten. Keine Installation nötig.
-- **Offline** – Arbeitet komplett mit lokalen Dateien.
-- **Cloud-Sync** – Kombiniere mit dem [Nextcloud Desktop Client](https://nextcloud.com/install/#install-clients) für automatische Synchronisation.
-- **Offenes Format** – Einfache Markdown-Dateien, die du überall öffnen kannst.
+### Einfache Dateien, volle Kontrolle
+NoteHub speichert alles als lesbare Markdown-Dateien in deiner Nextcloud. Öffne sie mit jedem Texteditor, synchronisiere sie über Geräte hinweg oder wechsle jederzeit zu einem anderen Tool. Deine Notizen sind nie eingesperrt.
+
+### Notizen & Aufgaben vereint
+Jede Notiz kann mit einem Klick zur Aufgabe werden. Setze Fälligkeitsdaten, Prioritäten und Erinnerungen. Farbige Ampelpunkte zeigen die Dringlichkeit auf einen Blick: 🟢 viel Zeit, 🟡 wird knapp, 🔴 überfällig.
+
+### Adressbuch-Integration
+Verknüpfe Notizen und Aufgaben mit Kontakten aus deinem Nextcloud-Adressbuch. Sieh alle Notizen zu einer Person oder Firma. Jeder Kontakt wird mit einer eindeutigen ID gespeichert – auch zwei Personen mit gleichem Namen bleiben unterscheidbar.
+
+### Flexible Organisation
+Nutze Tags statt starrer Ordnerstrukturen. Eine Notiz kann zu mehreren Themen gehören. Verknüpfe Gedanken mit `[[Wikilinks]]` und entdecke Zusammenhänge durch automatische Backlinks.
+
+### Vorlagen
+Erstelle eigene Vorlagen oder nutze die mitgelieferten für Tagebuch, Meeting-Protokoll, Aufträge, Einkaufslisten und Projekt-Notizen. Platzhalter wie Datum und Uhrzeit werden automatisch ausgefüllt.
+
+### Teilen & Zusammenarbeiten
+Teile einzelne Notizen mit anderen Nextcloud-Benutzern. Wähle zwischen Lese- und Bearbeitungsrechten. Geteilte Notizen erscheinen nahtlos in der Notizliste des Empfängers.
 
 ---
 
@@ -21,40 +34,74 @@ NoteHub Desktop liest und schreibt einfache `.md`-Dateien mit YAML-Frontmatter. 
 
 - Markdown-Editor mit Formatierungs-Toolbar
 - Live-Vorschau für gerendertes Markdown
-- Aufgaben mit Fälligkeit, Priorität und Farbampel (🟢🟡🔴)
+- Aufgaben mit Fälligkeit, Priorität und Farbampel
+- Erinnerungen über Nextcloud-Benachrichtigungen und E-Mail
 - Tags als virtuelle Ordner
 - Wikilinks & Backlinks
-- Kontakte-Verknüpfung (gespeichert im Frontmatter)
+- Kontakte-Verknüpfung mit Nextcloud-Adressbuch
 - Vorlagen mit automatischen Platzhaltern
-- Bilder einfügen per Zwischenablage (Strg+V) oder Datei-Auswahl
-- Sortierung nach 8 verschiedenen Kriterien
-- Automatische Erkennung von Dateiänderungen
+- Bilder einfügen per Zwischenablage (Strg+V) oder Datei-Upload
+- Teilen mit Nextcloud-Benutzern (Lesen / Bearbeiten)
+- Volltextsuche mit Datenbank-Index
+- Sortierung nach Titel, Datum, Fälligkeit, Priorität
+- Mobilfreundliches responsives Design
 - YAML-Frontmatter kompatibel mit Obsidian und Joplin
 
 ---
 
-## 🔗 Nextcloud-Integration
+## 🖥️ Auch als Desktop-App verfügbar
 
-NoteHub Desktop ist der perfekte Begleiter zu **[NoteHub für Nextcloud](https://github.com/Voelzke/notehub)**. Nutze die Nextcloud-App im Browser und die Desktop-App auf deinem Computer – beide arbeiten mit denselben Markdown-Dateien.
-
-Mit dem Nextcloud Desktop Client synchronisieren sich deine Notizen automatisch zwischen allen Geräten.
+**[NoteHub Desktop](https://github.com/Voelzke/notehub-desktop)** – Eine portable Desktop-App für Windows, Mac und Linux. Arbeitet direkt mit deinen lokalen Markdown-Dateien. Kombiniere sie mit dem Nextcloud Desktop Client für automatische Cloud-Synchronisation.
 
 ---
 
-## 📦 Download
+## 📦 Voraussetzungen
 
-Lade die neueste portable `.exe` von [Releases](https://github.com/Voelzke/notehub-desktop/releases) herunter.
+- Nextcloud 28 oder neuer
+- PHP 8.1 – 8.4
 
-**Verfügbar für:** Windows · Mac · Linux
+## 🚀 Installation
 
-## 🚀 Erste Schritte
+1. Lade das neueste Release herunter
+2. Entpacke es in dein Nextcloud `apps/`-Verzeichnis
+3. Aktiviere NoteHub in der Nextcloud-Verwaltung
 
-1. Lade `NoteHub-Desktop-portable.exe` herunter
-2. Starte die Datei – keine Installation nötig
-3. Wähle deinen NoteHub-Ordner (oder erstelle einen neuen)
-4. Leg los mit dem Notieren!
+Oder installiere direkt aus dem Nextcloud App Store (in Kürze verfügbar).
 
-**Tipp:** Zeige auf deinen Nextcloud-Sync-Ordner (z.B. `Nextcloud/NoteHub/`) für automatische Cloud-Synchronisation.
+## 📁 So funktioniert es
+
+NoteHub speichert Notizen als `.md`-Dateien im Ordner `NoteHub/` innerhalb deines Nextcloud-Benutzerverzeichnisses:
+
+```yaml
+---
+title: Meine Notiz
+tags: [projekt, ideen]
+type: task
+due: 2026-03-15
+priority: high
+contacts:
+  - name: Max Mustermann
+    company: Firma GmbH
+    uid: abc-123-def
+---
+
+# Meine Notiz
+
+Dein Inhalt hier in Markdown...
+```
+
+Ein Datenbank-Index sorgt für schnelle Suche und Sortierung, während die Dateien die einzige Wahrheitsquelle bleiben.
+
+---
+
+## 💬 Community
+
+Tritt der NoteHub-Community bei – melde Bugs, schlage Features vor oder sag einfach Hallo!
+
+- **Telegram:** [NoteHub_RVIT](https://t.me/NoteHub_RVIT)
+- **WhatsApp:** [NoteHub Community](https://chat.whatsapp.com/DPcI8mE7FHsBSEPvzBM5v3)
+- **GitHub Discussions:** [Diskussionen](https://github.com/Voelzke/notehub/discussions)
+- **GitHub Issues:** [Bug melden](https://github.com/Voelzke/notehub/issues)
 
 ---
 
@@ -62,8 +109,8 @@ Lade die neueste portable `.exe` von [Releases](https://github.com/Voelzke/noteh
 
 Beiträge sind willkommen! Du kannst:
 
-- Fehler melden über [Issues](https://github.com/Voelzke/notehub-desktop/issues)
-- Ideen vorschlagen über [Discussions](https://github.com/Voelzke/notehub-desktop/discussions)
+- Fehler melden über [Issues](https://github.com/Voelzke/notehub/issues)
+- Ideen vorschlagen über [Discussions](https://github.com/Voelzke/notehub/discussions)
 - Pull Requests einreichen
 
 Dieses Projekt wird entwickelt von [IT-Dienstleistungen Ralf Völzke](https://voelzke.de) in Nastätten, Deutschland. Fragen und Diskussionen auf Deutsch sind ausdrücklich willkommen!
